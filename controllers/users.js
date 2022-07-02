@@ -11,11 +11,18 @@ const getUsers = (req, res) => {
 
 const getUser = (req, res) => {
   User.findById(req.params.userId)
-    .then((user) => res.send(user))
+    .then((user) => {
+      if (user) {
+        res.send(user);
+      } else {
+        const ERROR_CODE = 404;
+        res.status(ERROR_CODE).send({ message: `Пользователь с id (${req.params.userId}) не найден` });
+      }
+    })
     .catch((err) => {
       if (err.path === '_id') {
-        const ERROR_CODE = 404;
-        res.status(ERROR_CODE).send({ message: `Пользователь с id ${err.value} не найден` });
+        const ERROR_CODE = 400;
+        res.status(ERROR_CODE).send({ message: 'Неверный формат id' });
       } else {
         const ERROR_CODE = 500;
         res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
