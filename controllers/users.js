@@ -1,11 +1,11 @@
 const User = require('../models/user');
+const { ERR_BAD_REQUEST, ERR_NOT_FOUND, ERR_SERVER_ERROR } = require('../utils/constants');
 
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send(users))
     .catch(() => {
-      const ERROR_CODE = 500;
-      res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+      res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
     });
 };
 
@@ -15,17 +15,14 @@ const getUser = (req, res) => {
       if (user) {
         res.send(user);
       } else {
-        const ERROR_CODE = 404;
-        res.status(ERROR_CODE).send({ message: `Пользователь с id (${req.params.userId}) не найден` });
+        res.status(ERR_NOT_FOUND).send({ message: `Пользователь с id (${req.params.userId}) не найден` });
       }
     })
     .catch((err) => {
-      if (err.path === '_id') {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({ message: 'Неверный формат id' });
+      if (err.name === 'CastError') {
+        res.status(ERR_BAD_REQUEST).send({ message: 'Неверный формат id' });
       } else {
-        const ERROR_CODE = 500;
-        res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
       }
     });
 };
@@ -36,11 +33,9 @@ const addUser = (req, res) => {
     .then((user) => res.status(201).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при создании пользователя.' });
+        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
       } else {
-        const ERROR_CODE = 500;
-        res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
       }
     });
 };
@@ -55,26 +50,21 @@ const updateProfile = (req, res) => {
       (err, docs) => {
         if (err) {
           if (err.name === 'ValidationError') {
-            const ERROR_CODE = 400;
-            res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
+            res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
           } else if (err.name === 'CastError') {
-            const ERROR_CODE = 400;
-            res.status(ERROR_CODE).send({ message: 'Передан некорректный id пользователя.' });
+            res.status(ERR_BAD_REQUEST).send({ message: 'Передан некорректный id пользователя.' });
           } else {
-            const ERROR_CODE = 500;
-            res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+            res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
           }
         } else if (docs) {
           res.send(docs);
         } else {
-          const ERROR_CODE = 404;
-          res.status(ERROR_CODE).send({ message: `Пользователь с id ${req.user._id} не найден` });
+          res.status(ERR_NOT_FOUND).send({ message: `Пользователь с id ${req.user._id} не найден` });
         }
       },
     );
   } else {
-    const ERROR_CODE = 400;
-    res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
+    res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
   }
 };
 
@@ -88,26 +78,21 @@ const updateAvatar = (req, res) => {
       (err, docs) => {
         if (err) {
           if (err.name === 'ValidationError') {
-            const ERROR_CODE = 400;
-            res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
+            res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
           } else if (err.name === 'CastError') {
-            const ERROR_CODE = 400;
-            res.status(ERROR_CODE).send({ message: 'Передан некорректный id пользователя.' });
+            res.status(ERR_BAD_REQUEST).send({ message: 'Передан некорректный id пользователя.' });
           } else {
-            const ERROR_CODE = 500;
-            res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+            res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
           }
         } else if (docs) {
           res.send(docs);
         } else {
-          const ERROR_CODE = 404;
-          res.status(ERROR_CODE).send({ message: `Пользователь с id ${req.user._id} не найден` });
+          res.status(ERR_NOT_FOUND).send({ message: `Пользователь с id ${req.user._id} не найден` });
         }
       },
     );
   } else {
-    const ERROR_CODE = 400;
-    res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
+    res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
   }
 };
 

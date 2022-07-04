@@ -1,11 +1,11 @@
 const Card = require('../models/card');
+const { ERR_BAD_REQUEST, ERR_NOT_FOUND, ERR_SERVER_ERROR } = require('../utils/constants');
 
 const getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send({ cards }))
     .catch(() => {
-      const ERROR_CODE = 500;
-      res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+      res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
     });
 };
 
@@ -15,11 +15,9 @@ const addCard = (req, res) => {
     .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при создании карточки.' });
+        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки.' });
       } else {
-        const ERROR_CODE = 500;
-        res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
       }
     });
 };
@@ -30,17 +28,14 @@ const deleteCard = (req, res) => {
       if (card) {
         res.send(card);
       } else {
-        const ERROR_CODE = 404;
-        res.status(ERROR_CODE).send({ message: 'Карточка с указанным id не найдена' });
+        res.status(ERR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
       }
     })
     .catch((err) => {
       if (err.path === '_id') {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({ message: 'Неверный формат id карточки' });
+        res.status(ERR_BAD_REQUEST).send({ message: 'Неверный формат id карточки' });
       } else {
-        const ERROR_CODE = 500;
-        res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
       }
     });
 };
@@ -55,17 +50,14 @@ const likeCard = (req, res) => {
       if (card) {
         res.send(card);
       } else {
-        const ERROR_CODE = 404;
-        res.status(ERROR_CODE).send({ message: 'Карточка с указанным id не найдена' });
+        res.status(ERR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
       }
     })
     .catch((err) => {
       if (err.path === '_id') {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({ message: 'Неверный формат id карточки' });
+        res.status(ERR_BAD_REQUEST).send({ message: 'Неверный формат id карточки' });
       } else {
-        const ERROR_CODE = 500;
-        res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
       }
     });
 };
@@ -80,17 +72,14 @@ const dislikeCard = (req, res) => {
       if (card) {
         res.send(card);
       } else {
-        const ERROR_CODE = 404;
-        res.status(ERROR_CODE).send({ message: 'Карточка с указанным id не найдена' });
+        res.status(ERR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
       }
     })
     .catch((err) => {
       if (err.path === '_id') {
-        const ERROR_CODE = 400;
-        res.status(ERROR_CODE).send({ message: 'Неверный формат id карточки' });
+        res.status(ERR_BAD_REQUEST).send({ message: 'Неверный формат id карточки' });
       } else {
-        const ERROR_CODE = 500;
-        res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
+        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
       }
     });
 };
