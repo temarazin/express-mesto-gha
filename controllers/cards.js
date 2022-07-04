@@ -12,7 +12,7 @@ const getCards = (req, res) => {
 const addCard = (req, res) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user })
-    .then((card) => res.send({ data: card }))
+    .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const ERROR_CODE = 400;

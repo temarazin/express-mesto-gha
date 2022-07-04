@@ -9,9 +9,7 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-mongoose.connect('mongodb://localhost:27017/mestodb', {
-
-});
+mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.use((req, res, next) => {
   req.user = {
@@ -23,6 +21,6 @@ app.use((req, res, next) => {
 
 app.use('/users/', usersRouter);
 app.use('/cards/', cardsRouter);
-app.use('/', (req, res) => { res.status(404).send({ message: 'error endpoint' }); });
+app.use((req, res) => { res.status(404).send({ message: 'wrong endpoint' }); });
 
 app.listen(process.env.PORT || 3000);

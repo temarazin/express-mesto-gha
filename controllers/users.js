@@ -33,7 +33,7 @@ const getUser = (req, res) => {
 const addUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send(user))
+    .then((user) => res.status(201).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         const ERROR_CODE = 400;
@@ -57,15 +57,18 @@ const updateProfile = (req, res) => {
           if (err.name === 'ValidationError') {
             const ERROR_CODE = 400;
             res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
-          } else if (err.path === '_id') {
-            const ERROR_CODE = 404;
-            res.status(ERROR_CODE).send({ message: `Пользователь с id ${err.value} не найден` });
+          } else if (err.name === 'CastError') {
+            const ERROR_CODE = 400;
+            res.status(ERROR_CODE).send({ message: 'Передан некорректный id пользователя.' });
           } else {
             const ERROR_CODE = 500;
             res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
           }
-        } else {
+        } else if (docs) {
           res.send(docs);
+        } else {
+          const ERROR_CODE = 404;
+          res.status(ERROR_CODE).send({ message: `Пользователь с id ${req.user._id} не найден` });
         }
       },
     );
@@ -87,15 +90,18 @@ const updateAvatar = (req, res) => {
           if (err.name === 'ValidationError') {
             const ERROR_CODE = 400;
             res.status(ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
-          } else if (err.path === '_id') {
-            const ERROR_CODE = 404;
-            res.status(ERROR_CODE).send({ message: `Пользователь с id ${err.value} не найден` });
+          } else if (err.name === 'CastError') {
+            const ERROR_CODE = 400;
+            res.status(ERROR_CODE).send({ message: 'Передан некорректный id пользователя.' });
           } else {
             const ERROR_CODE = 500;
             res.status(ERROR_CODE).send({ message: 'Что-то пошло не так' });
           }
-        } else {
+        } else if (docs) {
           res.send(docs);
+        } else {
+          const ERROR_CODE = 404;
+          res.status(ERROR_CODE).send({ message: `Пользователь с id ${req.user._id} не найден` });
         }
       },
     );
