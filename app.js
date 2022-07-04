@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
+const { ERR_NOT_FOUND } = require('./utils/constants');
 
 const app = express();
 
@@ -21,6 +22,6 @@ app.use((req, res, next) => {
 
 app.use('/users/', usersRouter);
 app.use('/cards/', cardsRouter);
-app.use((req, res) => { res.status(404).send({ message: 'wrong endpoint' }); });
+app.use((req, res) => { res.status(ERR_NOT_FOUND).send({ message: 'wrong endpoint' }); });
 
 app.listen(process.env.PORT || 3000);
