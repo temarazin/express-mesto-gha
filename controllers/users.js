@@ -1,4 +1,5 @@
 const User = require('../models/user');
+
 const { ERR_BAD_REQUEST, ERR_NOT_FOUND, ERR_SERVER_ERROR } = require('../utils/constants');
 
 const getUsers = (req, res) => {
@@ -28,8 +29,12 @@ const getUser = (req, res) => {
 };
 
 const addUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  User.create({
+    name, about, avatar, email, password,
+  })
     .then((user) => res.status(201).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
