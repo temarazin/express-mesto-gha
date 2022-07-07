@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 const { ERR_BAD_REQUEST, ERR_NOT_FOUND, ERR_SERVER_ERROR } = require('../utils/constants');
@@ -101,10 +103,37 @@ const updateAvatar = (req, res) => {
   }
 };
 
+const login = (req, res) => {
+  const { email, password } = req.body;
+  let dbUser;
+
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        throw new Error('Неверные E-mail или пароль');
+      }
+      dbUser = user;
+      return bcrypt.compare(password, user.password);
+    })
+    .then((matched) => {
+      if (!matched) {
+        throw new Error('Неверные E-mail или пароль');
+      }
+      const token = jwt.sign(
+        { _id: dbUser._id },
+        'secret-key',
+        { expiresIn: '7d' },
+      );
+      res.send({ token });
+    })
+    .catch((err) => res.status(401).send(err));
+};
+
 module.exports = {
   getUsers,
   getUser,
   addUser,
   updateProfile,
   updateAvatar,
+  login,
 };
