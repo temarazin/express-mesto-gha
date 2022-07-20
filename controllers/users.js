@@ -25,14 +25,15 @@ const getUser = (req, res, next) => {
         throw new NotFoundError(`Пользователь с id (${req.params.userId}) не найден`);
       }
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        const msg = 'Неверный формат id';
-        next(new BadRequestError(msg));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
+    // .catch((err) => {
+    //   if (err.name === 'CastError') {
+    //     const msg = 'Неверный формат id';
+    //     next(new BadRequestError(msg));
+    //   } else {
+    //     next(err);
+    //   }
+    // });
 };
 
 const getCurrentUser = (req, res, next) => {
@@ -68,12 +69,13 @@ const addUser = async (req, res, next) => {
     });
     res.status(201).send(user);
   } catch (err) {
-    if (err.name === 'ValidationError') {
-      const msg = 'Переданы некорректные данные при создании пользователя.';
-      next(new BadRequestError(msg));
-    } else {
-      next(err);
-    }
+    next(err);
+    // if (err.name === 'ValidationError') {
+    //   const msg = 'Переданы некорректные данные при создании пользователя.';
+    //   next(new BadRequestError(msg));
+    // } else {
+    //   next(err);
+    // }
   }
 };
 
@@ -86,15 +88,16 @@ const updateProfile = (req, res, next) => {
       { new: true, runValidators: true },
       (err, docs) => {
         if (err) {
-          if (err.name === 'ValidationError') {
-            const msg = 'Переданы некорректные данные при обновлении профиля.';
-            next(new BadRequestError(msg));
-          } else if (err.name === 'CastError') {
-            const msg = 'Передан некорректный id пользователя.';
-            next(new BadRequestError(msg));
-          } else {
-            next(err);
-          }
+          next(err);
+          // if (err.name === 'ValidationError') {
+          //   const msg = 'Переданы некорректные данные при обновлении профиля.';
+          //   next(new BadRequestError(msg));
+          // } else if (err.name === 'CastError') {
+          //   const msg = 'Передан некорректный id пользователя.';
+          //   next(new BadRequestError(msg));
+          // } else {
+          //   next(err);
+          // }
         } else if (docs) {
           res.send(docs);
         } else {
@@ -117,13 +120,14 @@ const updateAvatar = (req, res) => {
       { new: true, runValidators: true },
       (err, docs) => {
         if (err) {
-          if (err.name === 'ValidationError') {
-            res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
-          } else if (err.name === 'CastError') {
-            res.status(ERR_BAD_REQUEST).send({ message: 'Передан некорректный id пользователя.' });
-          } else {
-            res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
-          }
+          // if (err.name === 'ValidationError') {
+          //   res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
+          // } else if (err.name === 'CastError') {
+          //   res.status(ERR_BAD_REQUEST).send({ message: 'Передан некорректный id пользователя.' });
+          // } else {
+          //   res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
+          // }
+          next(err);
         } else if (docs) {
           res.send(docs);
         } else {
@@ -136,21 +140,21 @@ const updateAvatar = (req, res) => {
   }
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
   let dbUser;
 
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new Error('Неверные E-mail или пароль');
+        throw new BadRequestError('Неверные E-mail или пароль');
       }
       dbUser = user;
       return bcrypt.compare(password, user.password);
     })
     .then((matched) => {
       if (!matched) {
-        throw new Error('Неверные E-mail или пароль');
+        throw new BadRequestError('Неверные E-mail или пароль');
       }
       const token = jwt.sign(
         { _id: dbUser._id },
@@ -159,7 +163,7 @@ const login = (req, res) => {
       );
       res.status(201).send({ token });
     })
-    .catch((err) => res.status(401).send(err.message));
+    .catch(next);
 };
 
 module.exports = {
