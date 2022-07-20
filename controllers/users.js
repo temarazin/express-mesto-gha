@@ -127,7 +127,7 @@ const login = (req, res) => {
   const { email, password } = req.body;
   let dbUser;
 
-  User.findOne({ email })
+  User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
         throw new Error('Неверные E-mail или пароль');
