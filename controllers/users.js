@@ -2,13 +2,13 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
-const { ERR_BAD_REQUEST, ERR_NOT_FOUND, ERR_SERVER_ERROR } = require('../utils/constants');
+const { ERR_BAD_REQUEST, ERR_NOT_FOUND } = require('../utils/constants');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -26,14 +26,6 @@ const getUser = (req, res, next) => {
       }
     })
     .catch(next);
-    // .catch((err) => {
-    //   if (err.name === 'CastError') {
-    //     const msg = 'Неверный формат id';
-    //     next(new BadRequestError(msg));
-    //   } else {
-    //     next(err);
-    //   }
-    // });
 };
 
 const getCurrentUser = (req, res, next) => {
@@ -67,15 +59,14 @@ const addUser = async (req, res, next) => {
     const user = await User.create({
       name, about, avatar, email, password: hash,
     });
-    res.status(201).send(user);
+
+    res.status(201).send(
+      {
+        name, email, about, avatar, _id: user._id,
+      },
+    );
   } catch (err) {
     next(err);
-    // if (err.name === 'ValidationError') {
-    //   const msg = 'Переданы некорректные данные при создании пользователя.';
-    //   next(new BadRequestError(msg));
-    // } else {
-    //   next(err);
-    // }
   }
 };
 
@@ -89,15 +80,6 @@ const updateProfile = (req, res, next) => {
       (err, docs) => {
         if (err) {
           next(err);
-          // if (err.name === 'ValidationError') {
-          //   const msg = 'Переданы некорректные данные при обновлении профиля.';
-          //   next(new BadRequestError(msg));
-          // } else if (err.name === 'CastError') {
-          //   const msg = 'Передан некорректный id пользователя.';
-          //   next(new BadRequestError(msg));
-          // } else {
-          //   next(err);
-          // }
         } else if (docs) {
           res.send(docs);
         } else {
@@ -111,7 +93,7 @@ const updateProfile = (req, res, next) => {
   }
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   if (avatar) {
     User.findByIdAndUpdate(
@@ -120,13 +102,6 @@ const updateAvatar = (req, res) => {
       { new: true, runValidators: true },
       (err, docs) => {
         if (err) {
-          // if (err.name === 'ValidationError') {
-          //   res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
-          // } else if (err.name === 'CastError') {
-          //   res.status(ERR_BAD_REQUEST).send({ message: 'Передан некорректный id пользователя.' });
-          // } else {
-          //   res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
-          // }
           next(err);
         } else if (docs) {
           res.send(docs);
@@ -147,21 +122,21 @@ const login = (req, res, next) => {
   User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new BadRequestError('Неверные E-mail или пароль');
+        throw new UnauthorizedError('Неверные E-mail или пароль');
       }
       dbUser = user;
       return bcrypt.compare(password, user.password);
     })
     .then((matched) => {
       if (!matched) {
-        throw new BadRequestError('Неверные E-mail или пароль');
+        throw new UnauthorizedError('Неверные E-mail или пароль');
       }
       const token = jwt.sign(
         { _id: dbUser._id },
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
-      res.status(201).send({ token });
+      res.send({ token });
     })
     .catch(next);
 };
