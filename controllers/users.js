@@ -7,7 +7,7 @@ const ConflictError = require('../errors/ConflictError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
-const { ERR_BAD_REQUEST, ERR_NOT_FOUND } = require('../utils/constants');
+const { ERR_BAD_REQUEST, ERR_NOT_FOUND, MONGO_ERR_DUPLICATE_KEY } = require('../utils/constants');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 
 const getUsers = (req, res, next) => {
@@ -46,15 +46,6 @@ const addUser = async (req, res, next) => {
   } = req.body;
 
   try {
-    const dbUser = await User.findOne({ email });
-    if (dbUser) {
-      throw new ConflictError('Пользователь с указанным E-mail уже существует');
-    }
-  } catch (err) {
-    next(err);
-  }
-
-  try {
     const hash = await bcrypt.hash(password, 10);
     const user = await User.create({
       name, about, avatar, email, password: hash,
@@ -62,10 +53,19 @@ const addUser = async (req, res, next) => {
 
     res.status(201).send(
       {
-        name, email, about, avatar, _id: user._id,
+        name: user.name,
+        email: user.email,
+        about: user.about,
+        avatar: user.avatar,
+        _id: user._id,
       },
     );
   } catch (err) {
+    if (err.code === MONGO_ERR_DUPLICATE_KEY) {
+      const msg = 'Пользователь с таким E-mail уже существует';
+      next(new ConflictError(msg));
+      return;
+    }
     next(err);
   }
 };

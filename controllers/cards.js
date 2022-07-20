@@ -27,24 +27,15 @@ const deleteCard = async (req, res, next) => {
     }
   } catch (err) {
     next(err);
+    return;
   }
 
   try {
-    const card = await Card.findByIdAndRemove(req.params.cardId);
-    res.send(card);
+    await Card.findByIdAndRemove(req.params.cardId);
+    res.send({ message: 'Карточка успешно удалена' });
   } catch (err) {
     next(err);
   }
-
-  Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => {
-      if (card) {
-        res.send(card);
-      } else {
-        throw new NotFoundError('Карточка с указанным id не найдена');
-      }
-    })
-    .catch(next);
 };
 
 const likeCard = (req, res, next) => {
