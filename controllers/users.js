@@ -32,6 +32,20 @@ const getUser = (req, res) => {
     });
 };
 
+const getCurrentUser = (req, res) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (user) {
+        res.send(user);
+      } else {
+        res.status(ERR_NOT_FOUND).send({ message: `Пользователь с id (${req.params.userId}) не найден` });
+      }
+    })
+    .catch(() => {
+      res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
+    });
+};
+
 const addUser = (req, res) => {
   const {
     name, about, avatar, email, password,
@@ -138,6 +152,7 @@ const login = (req, res) => {
 module.exports = {
   getUsers,
   getUser,
+  getCurrentUser,
   addUser,
   updateProfile,
   updateAvatar,
