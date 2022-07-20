@@ -4,6 +4,7 @@ const User = require('../models/user');
 
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
+const ConflictError = require('../errors/ConflictError');
 
 const { NODE_ENV, JWT_SECRET } = process.env;
 
@@ -46,26 +47,34 @@ const getCurrentUser = (req, res, next) => {
     .catch(next);
 };
 
-const addUser = (req, res, next) => {
+const addUser = async (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
 
-  bcrypt.hash(password, 10)
-    .then((hash) => User.create({
+  try {
+    const dbUser = await User.find({ email });
+    if (dbUser) {
+      throw new ConflictError('Юзер с указанным E-mail уже существует');
+    }
+  } catch (err) {
+    next(err);
+  }
+
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    const user = await User.create({
       name, about, avatar, email, password: hash,
-    }))
-    .then((user) => {
-      res.status(201).send(user);
-    })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        const msg = 'Переданы некорректные данные при создании пользователя.';
-        next(new BadRequestError(msg));
-      } else {
-        next(err);
-      }
     });
+    res.status(201).send(user);
+  } catch (err) {
+    if (err.name === 'ValidationError') {
+      const msg = 'Переданы некорректные данные при создании пользователя.';
+      next(new BadRequestError(msg));
+    } else {
+      next(err);
+    }
+  }
 };
 
 const updateProfile = (req, res, next) => {
