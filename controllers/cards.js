@@ -1,44 +1,44 @@
+const BadRequestError = require('../errors/BadRequestError');
+const ForbiddenError = require('../errors/ForbiddenError');
+const NotFoundError = require('../errors/NotFoundError');
 const Card = require('../models/card');
-const {
-  ERR_BAD_REQUEST, ERR_FORBIDDEN, ERR_NOT_FOUND, ERR_SERVER_ERROR,
-} = require('../utils/constants');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ cards }))
-    .catch(() => {
-      res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
-    });
+    .catch(next);
 };
 
-const addCard = (req, res) => {
+const addCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.status(201).send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки.' });
+        const msg = 'Переданы некорректные данные при создании карточки.';
+        next(new BadRequestError(msg));
       } else {
-        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
+        next(err);
       }
     });
 };
 
-const deleteCard = async (req, res) => {
+const deleteCard = async (req, res, next) => {
   try {
     const card = await Card.findById(req.params.cardId);
 
     if (!card) {
-      res.status(ERR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
+      throw new NotFoundError('Карточка с указанным id не найдена');
     }
     if (card.owner.toString() !== req.user._id) {
-      res.send(ERR_FORBIDDEN).send({ message: 'Недостаточно прав' });
+      throw new ForbiddenError('Недостаточно прав');
     }
   } catch (err) {
     if (err.path === '_id') {
-      res.status(ERR_BAD_REQUEST).send({ message: 'Неверный формат id карточки' });
+      const msg = 'Неверный формат id карточки';
+      next(new BadRequestError(msg));
     } else {
-      res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
+      throw new Error();
     }
   }
 
@@ -46,7 +46,7 @@ const deleteCard = async (req, res) => {
     const card = await Card.findByIdAndRemove(req.params.cardId);
     res.send(card);
   } catch (err) {
-    res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
+    next(err);
   }
 
   Card.findByIdAndRemove(req.params.cardId)
@@ -54,19 +54,20 @@ const deleteCard = async (req, res) => {
       if (card) {
         res.send(card);
       } else {
-        res.status(ERR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
+        throw new NotFoundError('Карточка с указанным id не найдена');
       }
     })
     .catch((err) => {
       if (err.path === '_id') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Неверный формат id карточки' });
+        const msg = 'Неверный формат id карточки';
+        next(new BadRequestError(msg));
       } else {
-        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
+        next(err);
       }
     });
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -76,19 +77,20 @@ const likeCard = (req, res) => {
       if (card) {
         res.send(card);
       } else {
-        res.status(ERR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
+        throw new NotFoundError('Карточка с указанным id не найдена');
       }
     })
     .catch((err) => {
       if (err.path === '_id') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Неверный формат id карточки' });
+        const msg = 'Неверный формат id карточки';
+        next(new BadRequestError(msg));
       } else {
-        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
+        next(err);
       }
     });
 };
 
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
@@ -98,14 +100,15 @@ const dislikeCard = (req, res) => {
       if (card) {
         res.send(card);
       } else {
-        res.status(ERR_NOT_FOUND).send({ message: 'Карточка с указанным id не найдена' });
+        throw new NotFoundError('Карточка с указанным id не найдена');
       }
     })
     .catch((err) => {
       if (err.path === '_id') {
-        res.status(ERR_BAD_REQUEST).send({ message: 'Неверный формат id карточки' });
+        const msg = 'Неверный формат id карточки';
+        next(new BadRequestError(msg));
       } else {
-        res.status(ERR_SERVER_ERROR).send({ message: 'Что-то пошло не так' });
+        next(err);
       }
     });
 };
