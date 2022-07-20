@@ -53,9 +53,9 @@ const addUser = async (req, res, next) => {
   } = req.body;
 
   try {
-    const dbUser = await User.find({ email });
+    const dbUser = await User.findOne({ email });
     if (dbUser) {
-      throw new ConflictError('Юзер с указанным E-mail уже существует');
+      throw new ConflictError('Пользователь с указанным E-mail уже существует');
     }
   } catch (err) {
     next(err);

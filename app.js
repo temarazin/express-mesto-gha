@@ -31,7 +31,7 @@ app.use((err, req, res, next) => {
     statusCode = ERR_SERVER_ERROR,
     message = 'Что-то пошло не так',
   } = err;
-  res.status(statusCode).send(message);
+  res.status(statusCode).send({ message });
 });
 
 app.listen(process.env.PORT || 3000);
